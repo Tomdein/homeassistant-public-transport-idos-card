@@ -15,60 +15,82 @@ class IDOSCard extends LitElement {
   }
 
   render() {
-    var attributes;
-    var delay;
-    var connection;
+    return html`
+      <ha-card>
+        <div class="card-content">
+          ${this.config.entities.map((ent) => {
+            const stateObj = this.hass.states[ent];
 
-    return html` <div class="card-content">
-      ${this.config.entities.map((ent) => {
-        const stateObj = this.hass.states[ent];
-        return stateObj
-          ? ((attributes = stateObj.attributes),
-            (connection = attributes.connections[0]),
-            html`
-              <div class="connection">
-                <div class="connection-datetime">
-                  <span class="connection-time"
-                    >${attributes.departure_time}</span
-                  >
-                  <span class="connection-date">DD.MM</span>
-                </div>
-                <span class="connection-delay"
-                  >${(delay = connection.delay) ? delay : ""}</span
-                >
-                <div class="connection-type-num">
-                  <img />
-                  <span class="connection-type">${connection.type}</span>
-                  <span class="connection-num">${connection.number}</span>
-                </div>
-                <ul class="single-connection-list">
-                  <li class="single-connection-item">
-                    <span class="time">${connection.times[0]}</span>
-                    <span>${connection.stations[0]}</span>
-                    <span>${connection.platforms[0]}</span>
-                  </li>
-                  <li class="single-connection">
-                    <span class="time">${connection.times[1]}</span>
-                    <span>${connection.stations[1]}</span>
-                    <span>${connection.platforms[1]}</span>
-                  </li>
-                </ul>
-                <hr />
+            if (!stateObj) {
+              return html`
+                <div class="not-found">Entity ${ent} not found.</div>
+              `;
+            }
+
+            var attributes = stateObj.attributes;
+            var delay;
+
+            return html` <div class="connection">
+              <div class="connection-datetime">
+                <span class="connection-time">
+                  ${attributes.departure_time}
+                </span>
+                <span class="connection-date">DD.MM</span>
               </div>
-            `)
-          : html` <div class="not-found">Entity ${ent} not found.</div> `;
-      })}
-    </div>`;
+              <span class="connection-delay">
+                ${(delay = attributes.connections[0].delay) ? delay : ""}
+              </span>
+              ${attributes.connections.map((connection) => {
+                return html` <div
+                    class="connection-type-num ${connection.type === "Bus"
+                      ? "connection-type-bus"
+                      : connection.type === "Tram"
+                      ? "connection-type-tram"
+                      : "connection-type-else"}"
+                  >
+                    <img />
+                    <span class="connection-type">${connection.type}</span>
+                    <span class="connection-num">${connection.number}</span>
+                  </div>
+                  <ul class="single-connection-list">
+                    <li class="single-connection-item">
+                      <span class="time">${connection.times[0]}</span>
+                      <span>${connection.stations[0]}</span>
+                      <span>${connection.platforms[0]}</span>
+                    </li>
+                    <li class="single-connection">
+                      <span class="time">${connection.times[1]}</span>
+                      <span>${connection.stations[1]}</span>
+                      <span>${connection.platforms[1]}</span>
+                    </li>
+                  </ul>`;
+              })}
+              <hr />
+            </div>`;
+          })}
+        </div>
+      </ha-card>
+    `;
   }
 
   static get styles() {
     return css`
       .card-content {
-        background: darkgrey;
+        --card-background-color-darken: rgb(
+          from var(--card-background-color) calc(r * 0.85) calc(g * 0.85)
+            calc(b * 0.85)
+        );
+        margin: 0em;
+        padding: 1.5em 0em;
+        border-radius: 1em;
+      }
+
+      .connection {
+        margin: 0em 0em 1em 0em;
+        padding: 0em 1.5em;
       }
 
       .connection-datetime {
-        background: grey;
       }
 
       .connection-date {
@@ -82,6 +104,18 @@ class IDOSCard extends LitElement {
       .connection-type-num {
       }
 
+      .connection-type-num.connection-type-bus {
+        color: blue;
+      }
+
+      .connection-type-num.connection-type-tram {
+        color: red;
+      }
+
+      .connection-type-num.connection-type-else {
+        color: green;
+      }
+
       .single-connection-list {
         list-style: none;
         margin-top: 0em;
@@ -93,7 +127,7 @@ class IDOSCard extends LitElement {
         content: "";
         display: inline-block;
         border-radius: 50%;
-        background: black;
+        background: var(--state-icon-color);
         width: 10px;
         height: 10px;
         margin-right: 5px;
