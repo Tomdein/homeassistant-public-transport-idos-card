@@ -6,6 +6,8 @@ import {
   css,
 } from "https://unpkg.com/lit-element@2.0.1/lit-element.js?module";
 
+//import "raw.githubusercontent.com/home-assistant/frontend/20231030.1/src/components/ha-svg-icon";
+
 class IDOSCard extends LitElement {
   static get properties() {
     return {
@@ -37,20 +39,22 @@ class IDOSCard extends LitElement {
                 </span>
                 <span class="connection-date">DD.MM</span>
               </div>
-              <span class="connection-delay">
-                ${(delay = attributes.connections[0].delay) ? delay : ""}
-              </span>
               ${attributes.connections.map((connection) => {
-                return html` <div
-                    class="connection-type-num ${connection.type === "Bus"
-                      ? "connection-type-bus"
-                      : connection.type === "Tram"
-                      ? "connection-type-tram"
-                      : "connection-type-else"}"
-                  >
-                    <img />
-                    <span class="connection-type">${connection.type}</span>
-                    <span class="connection-num">${connection.number}</span>
+                return html` <div>
+                    <span
+                      class="connection-type-num ${connection.type === "Bus"
+                        ? "connection-type-bus"
+                        : connection.type === "Tram"
+                        ? "connection-type-tram"
+                        : "connection-type-else"}"
+                    >
+                      <img />
+                      <span class="connection-type">${connection.type}</span>
+                      <span class="connection-num">${connection.number}</span>
+                    </span>
+                    ${(delay = connection.delay)
+                      ? '<span class="connection-delay">' + delay + "</span>"
+                      : ""}
                   </div>
                   <ul class="single-connection-list">
                     <li class="single-connection-item">
@@ -68,6 +72,12 @@ class IDOSCard extends LitElement {
               <hr />
             </div>`;
           })}
+          <div class="page-more-button"></div>
+
+          <ha-icon
+            class="page-more-button-icon"
+            .icon=${this.hass.states[this.config.button].attributes.icon}
+          ></ha-icon>
         </div>
       </ha-card>
     `;
@@ -81,16 +91,31 @@ class IDOSCard extends LitElement {
             calc(b * 0.85)
         );
         margin: 0em;
-        padding: 1.5em 0em;
+        padding: 1.5em 0em 0em;
         border-radius: 1em;
       }
 
+      .card-content hr {
+        border-bottom-width: 0px;
+        border-color: var(
+          --ha-card-border-color,
+          var(--divider-color, #e0e0e0)
+        );
+        margin: 7px 0px 0px;
+      }
+
       .connection {
-        margin: 0em 0em 1em 0em;
+        margin: 0em 0em 0em 0em;
         padding: 0em 1.5em;
       }
 
+      .connection > * {
+        padding: 0 0 0 7px;
+      }
+
       .connection-datetime {
+        padding: 7px;
+        background-color: var(--card-background-color-darken);
       }
 
       .connection-date {
@@ -98,18 +123,23 @@ class IDOSCard extends LitElement {
       }
 
       .connection-delay {
-        background: green;
+        background: rgba(13, 89, 32, 0.5);
+        border-radius: 5px;
+        padding: 1px;
+        margin: 1px;
+        float: right;
+        font-size: 12px;
       }
 
       .connection-type-num {
       }
 
       .connection-type-num.connection-type-bus {
-        color: blue;
+        color: #1940b3;
       }
 
       .connection-type-num.connection-type-tram {
-        color: red;
+        color: rgb(134, 19, 19);
       }
 
       .connection-type-num.connection-type-else {
@@ -123,14 +153,27 @@ class IDOSCard extends LitElement {
         padding-left: 20px;
       }
 
+      .single-connection-item {
+      }
+
       .time:before {
         content: "";
         display: inline-block;
         border-radius: 50%;
         background: var(--state-icon-color);
-        width: 10px;
-        height: 10px;
-        margin-right: 5px;
+        width: 6px;
+        height: 6px;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+
+      .page-more-button-icon {
+        color: var(--state-icon-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 80px;
+        justify-content: center;
       }
     `;
   }
