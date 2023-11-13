@@ -1,5 +1,3 @@
-import "https://unpkg.com/wired-card@0.8.1/wired-card.js?module";
-import "https://unpkg.com/wired-toggle@0.8.0/wired-toggle.js?module";
 import {
   LitElement,
   html,
@@ -17,61 +15,99 @@ class IDOSCard extends LitElement {
   }
 
   render() {
+    var text_departure_config = {
+      type: "entity",
+      entity: "text.idos_public_transport_departure_input",
+      state_color: false,
+      name: "From",
+      icon: "noa",
+    };
+
+    var text_arrival_config = structuredClone(text_departure_config);
+    text_arrival_config.entity = "text.idos_public_transport_arrival_input";
+
     return html`
       <ha-card>
         <div class="card-content">
-          ${this.config.entities.map((ent) => {
-            const stateObj = this.hass.states[ent];
+          <div class="station-selection-wrapper">
+            <span class="station-selection">
+              <hui-entity-card
+                style="ha-card: {--ha-card-border-width: none;}"
+                .hass=${this.hass}
+                ._config=${text_departure_config}
+              ></hui-entity-card>
+              <hui-entity-card
+                .hass=${this.hass}
+                ._config=${text_arrival_config}
+              ></hui-entity-card>
+            </span>
+          </div>
+          ${!this.config
+            ? ""
+            : this.config.entities.map((ent) => {
+                const stateObj = this.hass.states[ent];
 
-            if (!stateObj) {
-              return html`
-                <div class="not-found">Entity ${ent} not found.</div>
-              `;
-            }
+                if (!stateObj) {
+                  return html`
+                    <div class="not-found">Entity ${ent} not found.</div>
+                  `;
+                }
 
-            var attributes = stateObj.attributes;
-            var delay;
+                var attributes = stateObj.attributes;
+                var delay;
 
-            return html` <div class="connection">
-              <div class="connection-datetime">
-                <span class="connection-time">
-                  ${attributes.departure_time}
-                </span>
-                <span class="connection-date">DD.MM</span>
-              </div>
-              ${attributes.connections.map((connection) => {
-                return html` <div>
-                    <span
-                      class="connection-type-num ${connection.type === "Bus"
-                        ? "connection-type-bus"
-                        : connection.type === "Tram"
-                        ? "connection-type-tram"
-                        : "connection-type-else"}"
-                    >
-                      <img />
-                      <span class="connection-type">${connection.type}</span>
-                      <span class="connection-num">${connection.number}</span>
+                if (!attributes.connections) {
+                  return html`<div class="not-found-station">
+                    Station not found.
+                  </div>`;
+                }
+
+                return html` <div class="connection">
+                  <div class="connection-datetime">
+                    <span class="connection-time">
+                      ${attributes?.departure_time}
                     </span>
-                    ${(delay = connection.delay)
-                      ? '<span class="connection-delay">' + delay + "</span>"
-                      : ""}
+                    <span class="connection-date">DD.MM</span>
                   </div>
-                  <ul class="single-connection-list">
-                    <li class="single-connection-item">
-                      <span class="time">${connection.times[0]}</span>
-                      <span>${connection.stations[0]}</span>
-                      <span>${connection.platforms[0]}</span>
-                    </li>
-                    <li class="single-connection">
-                      <span class="time">${connection.times[1]}</span>
-                      <span>${connection.stations[1]}</span>
-                      <span>${connection.platforms[1]}</span>
-                    </li>
-                  </ul>`;
+                  ${attributes.connections?.map((connection) => {
+                    return html` <div class="single-connection-wrapper">
+                      <div class="connection-type-num-wrapper">
+                        <span
+                          class="connection-type-num ${connection.type === "Bus"
+                            ? "connection-type-bus"
+                            : connection.type === "Tram"
+                            ? "connection-type-tram"
+                            : "connection-type-else"}"
+                        >
+                          <img />
+                          <span class="connection-type"
+                            >${connection.type}</span
+                          >
+                          <span class="connection-num"
+                            >${connection.number}</span
+                          >
+                        </span>
+                        ${(delay = connection.delay)
+                          ? html`<span class="connection-delay">${delay}</span>`
+                          : ""}
+                      </div>
+                      <ul class="single-connection-list">
+                        <li class="single-connection-item">
+                          <span class="time">${connection.times[0]}</span>
+                          <span>${connection.stations[0]}</span>
+                          <span>${connection.platforms[0]}</span>
+                        </li>
+                        <li class="single-connection-item">
+                          <span class="time">${connection.times[1]}</span>
+                          <span>${connection.stations[1]}</span>
+                          <span>${connection.platforms[1]}</span>
+                        </li>
+                      </ul>
+                    </div>`;
+                  })}
+                  <hr />
+                </div>`;
               })}
-              <hr />
-            </div>`;
-          })}
           <div class="page-more-button"></div>
 
           <ha-icon
@@ -91,8 +127,9 @@ class IDOSCard extends LitElement {
             calc(b * 0.85)
         );
         margin: 0em;
-        padding: 1.5em 0em 0em;
-        border-radius: 1em;
+        padding: 1.5em 0 0;
+        border-radius: var(--ha-card-border-radius, 12px);
+        border-width: var(--ha-card-border-width, 1px);
       }
 
       .card-content hr {
@@ -101,12 +138,30 @@ class IDOSCard extends LitElement {
           --ha-card-border-color,
           var(--divider-color, #e0e0e0)
         );
-        margin: 7px 0px 0px;
+        margin: 7px 0 0;
       }
 
-      .connection {
-        margin: 0em 0em 0em 0em;
-        padding: 0em 1.5em;
+      .card-content hui-entity-card {
+        --ha-card-border-width: 0;
+      }
+
+      .station-selection-wrapper {
+        padding: 0 2.5%;
+      }
+
+      .station-selection {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 2.5%;
+      }
+
+      .connection,
+      .station-selection-wrapper {
+        margin: 0 2.5%;
+      }
+
+      .connnection {
+        padding: 0 0 0 0;
       }
 
       .connection > * {
@@ -124,11 +179,18 @@ class IDOSCard extends LitElement {
 
       .connection-delay {
         background: rgba(13, 89, 32, 0.5);
-        border-radius: 5px;
-        padding: 1px;
-        margin: 1px;
+        padding: 0 3px;
+        margin: 0;
         float: right;
         font-size: 12px;
+        border-radius: 2px;
+      }
+
+      .single-connection-wrapper {
+        margin: 0.5em 0 0 0;
+      }
+
+      .connection-type-num-wrapper {
       }
 
       .connection-type-num {
