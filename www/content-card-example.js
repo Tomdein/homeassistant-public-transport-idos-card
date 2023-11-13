@@ -17,14 +17,15 @@ class IDOSCard extends LitElement {
   render() {
     var text_departure_config = {
       type: "entity",
-      entity: "text.idos_public_transport_departure_input",
+      entity: this.config.text_departure_entity,
       state_color: false,
       name: "From",
       icon: "noa",
     };
 
     var text_arrival_config = structuredClone(text_departure_config);
-    text_arrival_config.entity = "text.idos_public_transport_arrival_input";
+    text_arrival_config.entity = this.config.text_arrival_entity;
+    text_arrival_config.name = "To";
 
     return html`
       <ha-card>
@@ -112,7 +113,7 @@ class IDOSCard extends LitElement {
 
           <ha-icon
             class="page-more-button-icon"
-            .icon=${this.hass.states[this.config.button].attributes.icon}
+            .icon=${this.hass.states[this.config.button]?.attributes?.icon}
           ></ha-icon>
         </div>
       </ha-card>
@@ -242,7 +243,13 @@ class IDOSCard extends LitElement {
 
   setConfig(config) {
     if (!config.entities) {
-      throw new Error("You need to define entities");
+      throw new Error("You need to define list of 'entities'");
+    } else if (!config.button) {
+      throw new Error("You need to define 'button' entity");
+    } else if (!config.text_departure_entity) {
+      throw new Error("You need to define 'text_departure_entity' entity");
+    } else if (!config.text_arrival_entity) {
+      throw new Error("You need to define 'text_arrival_entity' entity");
     }
     this.config = config;
   }
