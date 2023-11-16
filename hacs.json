@@ -1,4 +1,5 @@
 {
   "name": "IDOS Public Transport UI Card",
-  "country": ["CZ"]
+  "country": ["CZ"],
+  "render_readme": true
 }
