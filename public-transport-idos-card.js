@@ -50,7 +50,7 @@ class IDOSCard extends LitElement {
 
                 if (!stateObj) {
                   return html`
-                    <div class="not-found">Entity ${ent} not found.</div>
+                    ${this.#_showError("Unknown entity '" + ent + "'")}
                   `;
                 }
 
@@ -258,6 +258,26 @@ class IDOSCard extends LitElement {
   // distribute all cards over the available columns.
   getCardSize() {
     return this.config.entities.length + 1;
+  }
+
+  #_showError(error) {
+    const errorCard = document.createElement("hui-error-card");
+    errorCard.setConfig({
+      type: "error",
+      error,
+      origConfig: this.config,
+    });
+
+    return html` ${errorCard} `;
+
+    // These are equivalent:
+    // var err = {
+    //   type: "error",
+    //   error: "error",
+    //   origConfig: this.config,
+    // };
+
+    // return html`<hui-error-card ._config=${err}></hui-error-card>`;
   }
 }
 
