@@ -431,7 +431,18 @@ class IDOSCard extends LitElement {
   // The height of your card. Home Assistant uses this to automatically
   // distribute all cards over the available columns.
   getCardSize() {
-    return this.config.entities.length + 1;
+    var size = 90 + 21; // Padding + text entities
+    this.config.entities.map((ent) => {
+      const stateObj = this.hass.states[ent];
+      var connections;
+      size += (connections = stateObj.attributes?.connections)
+        ? connections.len * 60
+        : 0;
+      size += 35;
+    });
+    size += 80; // Button
+
+    return Math.ceil(size / 50.0);
   }
 
   station_mousedown_event(input_id_to_focus) {
